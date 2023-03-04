@@ -2,30 +2,32 @@ use std::io::{BufRead, BufReader};
 
 use crate::error::Error;
 
-pub fn run<R>(mut input: R) -> Result<(), Error>
+pub fn run<R>(input: R) -> Result<(), Error>
 where
 R: BufRead,
 {
-    let mut content = Vec::new();
-    input.read_to_end(&mut content)?;
-
-    let mut reader = BufReader::new(&content[..]);
-    run_part(&mut reader, part_one)?;
-
-    let mut reader = BufReader::new(&content[..]);
-    run_part(&mut reader, part_two)?;
-
+    let (total1, total2) = run2(input)?;
+    println!("{}", total1);
+    println!("{}", total2);
     Ok(())
 }
 
-pub fn run_part<F, R>(input: &mut R, func: F) -> Result<(), Error>
+pub fn run2<R>(mut input: R) -> Result<(usize, usize), Error>
 where
 R: BufRead,
-F: Fn(usize) -> usize,
 {
     let mut buffer = String::new();
+    let mut total1 = 0;
+    let mut total2 = 0;
 
-    let mut total = 0;
+    // for res in input.lines() {
+    //     let line = res?;
+    //     let n = line.trim().parse::<usize>()?;
+
+    //     total1 += part_one(n);
+    //     total2 += part_two(n);
+    // }
+
     loop {
         if input.read_line(&mut buffer)? == 0 {
             break;
@@ -33,15 +35,13 @@ F: Fn(usize) -> usize,
         
         let n = buffer.trim().parse::<usize>()?;
 
-        let fuel = func(n);
-        total += fuel;
+        total1 += part_one(n);
+        total2 += part_two(n);
 
         buffer.clear();
     }
 
-    println!("{}", total);
-
-    Ok(())
+    Ok((total1, total2))
 }
 
 fn part_one(size: usize) -> usize {
@@ -60,5 +60,28 @@ fn part_two(mut size: usize) -> usize {
         };
         total += m;
         size = m;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_01() {
+        let test_cases = &[
+            // input, expected1, expected2
+            ("12", 2, 2),
+            ("14", 2, 2),
+            ("1969", 654, 966),
+            ("100756", 33583, 50346),
+        ];
+
+        for (input, expected1, expected2) in test_cases {
+            let reader = BufReader::new(input.as_bytes());
+            let (actual1, actual2) = run2(reader).unwrap();
+            assert_eq!(actual1, *expected1);
+            assert_eq!(actual2, *expected2);
+        }
     }
 }
